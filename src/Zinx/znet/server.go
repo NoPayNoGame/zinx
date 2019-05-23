@@ -14,7 +14,7 @@ type Server struct {
 }
 
 //type HandleFunc func(*net.TCPConn,[]byte,int) error
-func CallBackBusi(request Request) error {
+func CallBackBusi(request ziface.IRequest) error {
 	//	回显业务
 	fmt.Println("[conn handle]CallBack..")
 	conn := request.GetConnection().GetTCPConnection()
@@ -76,6 +76,7 @@ func (s *Server) Start() {
 
 			//	将原生的conn 和 CallBack 绑定
 			dealConn := NewConnection(conn, cid, CallBackBusi)
+
 			cid++
 
 			go dealConn.Start()

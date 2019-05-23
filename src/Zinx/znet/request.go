@@ -14,12 +14,12 @@ type Request struct {
 }
 
 func NewRequest(conn ziface.IConnection, data []byte, len int) ziface.IRequest {
-	irq := &Request{
+	req := &Request{
 		conn: conn,
 		data: data,
 		len:  len,
 	}
-	return irq
+	return req
 
 }
 

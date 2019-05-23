@@ -51,10 +51,10 @@ func (c *Connection) StartReader() {
 		//将当前一次性得到的对端客户端请求的数据 封装成一个Request
 		req := NewRequest(c, buf, cnt)
 
-		//	讲述传递给我们定义好的Handle CallBack方法
-		c.handleAPI(req)
+		//	讲述传递给我们定义好的Handle CallBack方法s
+		//c.handleAPI(req)
 
-		err = c.handleAPI(c.Conn, buf, cnt)
+		err = c.handleAPI(req)
 		if err != nil {
 			fmt.Println("ConnID", c.ConnID, "Handle is error", err)
 			break
@@ -65,7 +65,7 @@ func (c *Connection) StartReader() {
 //启动链接
 func (c *Connection) Start() {
 	fmt.Println("conn start(),conn ID =", c.ConnID)
-	c.StartReader()
+	go c.StartReader()
 }
 
 //停止链接
