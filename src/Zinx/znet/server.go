@@ -13,11 +13,27 @@ type Server struct {
 	Name      string
 }
 
-func NewServer(IpVersion string, IP string, Port int, Name string) ziface.IServer {
+//type HandleFunc func(*net.TCPConn,[]byte,int) error
+func CallBackBusi(request Request) error {
+	//	回显业务
+	fmt.Println("[conn handle]CallBack..")
+	conn := request.GetConnection().GetTCPConnection()
+	data := request.GetData()
+	cnt := request.GetDataLen()
+
+	if _, err := conn.Write(data[:cnt]); err != nil {
+		fmt.Println("Write Call Back error:", err)
+		return err
+	}
+	return nil
+
+}
+
+func NewServer(Name string) ziface.IServer {
 	s := &Server{
-		IpVersion: IpVersion,
-		IP:        IP,
-		Port:      Port,
+		IpVersion: "tcp4",
+		IP:        "0.0.0.0",
+		Port:      7000,
 		Name:      Name,
 	}
 	return s
@@ -28,54 +44,65 @@ func (s *Server) Start() {
 
 	//	1 创建套接字:得到一个TCP的addr
 	addr, err := net.ResolveTCPAddr(s.IpVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
-	fmt.Println(addr)
-	fmt.Printf("%T", addr)
 	if err != nil {
 		fmt.Println("resolve tcp addr error:", err)
 		return
 	}
 
 	//	2 监听服务器地址
-	//listenner2,err := net.Listen(s.IpVersion,s.IP)
 	listenner, err := net.ListenTCP(s.IpVersion, addr)
 	if err != nil {
 		fmt.Println("listen:", s.IpVersion, "error:", err)
 		return
 	}
 
+	//	生成id累加器
+	var cid uint32
+	cid = 0
+
 	//	3 阻塞等待客户端发送请求
 	go func() {
 		for {
 			//	阻塞等待客户端请求
-			conn, err := listenner.Accept()
+			conn, err := listenner.AcceptTCP() //只针对TCP协议,所以用AcceptTCP
 			if err != nil {
 				fmt.Println("Accept error:", err)
 				continue
 			}
 
+			//	创建一个Connction对象
+			//	func NewConnection(conn *net.TCPConn, connID uint32, callback_api ziface.HandleFunc) ziface.IConnection {
+			//	func CallBackBusi(conn *net.TCPConn, data []byte, cnt int) error {
+
+			//	将原生的conn 和 CallBack 绑定
+			dealConn := NewConnection(conn, cid, CallBackBusi)
+			cid++
+
+			go dealConn.Start()
+
 			//	conn和对端连接成功
-			go func() {
-				//	4 客户端有数据请求,处理客户端业务(读,写)
-				//	循环读写
-				for {
-
-					buf := make([]byte, 512)
-					cnt, err := conn.Read(buf)
-					if err != nil {
-						fmt.Println("recv buf err", err) //EOF
-						//	连接断开,不再循环
-						break
-					}
-					fmt.Printf("收到客户端数据%s,长度为:%d\n", buf, cnt)
-
-					//	回显功能	(业务)
-
-					if _, err := conn.Write(buf[:cnt]); err != nil {
-						fmt.Println("输出buf错误:", err)
-						continue
-					}
-				}
-			}()
+			//go func() {
+			//	//	4 客户端有数据请求,处理客户端业务(读,写)
+			//	//	循环读写
+			//	for {
+			//
+			//		buf := make([]byte, 512)
+			//		cnt, err := conn.Read(buf)
+			//		if err != nil {
+			//			fmt.Println("recv buf err", err) //EOF
+			//			//	连接断开,不再循环
+			//			break
+			//		}
+			//		fmt.Printf("收到客户端数据%s,长度为:%d\n", buf, cnt)
+			//
+			//		//	回显功能	(业务)
+			//
+			//		if _, err := conn.Write(buf[:cnt]); err != nil {
+			//			fmt.Println("输出buf错误:", err)
+			//			continue
+			//		}
+			//	}
+			//}()
 		}
 	}()
 }

@@ -1,6 +1,7 @@
 package ziface
 
 import "net"
+
 /*
 	抽象链接层
 */
@@ -21,8 +22,8 @@ type IConnection interface {
 	GetRemoteAddr() net.Addr
 
 	//发送数据给对方客户端
-	Send(data []byte) error
+	Send(data []byte, cnt int) error
 }
 
 //业务处理方法 抽象定义
-type HandleFunc func(*net.TCPConn,[]byte,int) error
+type HandleFunc func(request IRequest) error
