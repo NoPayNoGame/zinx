@@ -120,3 +120,7 @@ func (s *Server) Server() {
 	//	告诉CPU不需要处理,节省cpu资源
 	select {}
 }
+
+func (s *Server) AddRouter(router ziface.IRouter) {
+	s.Router = router
+}
